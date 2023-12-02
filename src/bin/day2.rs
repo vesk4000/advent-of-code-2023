@@ -12,23 +12,25 @@ fn main() {
         let id = game.split(":").collect::<Vec<_>>()[0]
             .split(" ").collect::<Vec<_>>()[1].parse::<i32>().unwrap();
         let rounds = content.split(";").collect::<Vec<_>>();
-
+        let mut map = HashMap::from([
+            ("red", 0), ("blue", 0), ("green", 0)
+        ]);
         for round in rounds {
             let draws = round.split(",").map(|d| d.trim()).collect::<Vec<_>>();
-            let mut map = HashMap::from([
-                ("red", 0), ("blue", 0), ("green", 0)
-            ]);
             for draw in draws {
                 let split = draw.split(" ").collect::<Vec<_>>();
                 let num = split[0].parse::<i32>().unwrap();
                 let colour = split[1];
-                map.insert(colour, num);
+                if map[colour] < num {
+                    map.insert(colour, num);
+                }
+                // map[colour].insert(num);
             }
-            if map["red"] > 12 || map["green"] > 13 || map["blue"] > 14 {
+            /*if map["red"] > 12 || map["green"] > 13 || map["blue"] > 14 {
                 continue 'outer;
-            }
+            }*/
         }
-        ans += id;
+        ans += map["red"] * map["green"] * map["blue"];
     }
     println!("{ans}");
 }
