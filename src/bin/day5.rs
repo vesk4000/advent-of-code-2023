@@ -26,23 +26,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let mut ans: u64 = 1000000000;
-    'ss: for seed in seeds {
-        //println!("{seed}");
-        let mut s = seed;
+    'ss: for (i, from) in seeds.iter().enumerate() {
+        if(i % 2 != 0) {
+            continue;
+        }
+        let len = seeds[i + 1];
+        for seed in *from..*from + len {
+            //println!("{seed}");
+            let mut s = seed;
 
-        'tt: for transform in &transforms {
-            //println!("{seed} {s}");
-            'rr: for r in transform {
-                if(s >= r.1 && s < r.1 + r.2) {
-                    s = r.0 + s - r.1;
-                    break 'rr;
+            'tt: for transform in &transforms {
+                //println!("{seed} {s}");
+                'rr: for r in transform {
+                    if(s >= r.1 && s < r.1 + r.2) {
+                        s = r.0 + s - r.1;
+                        break 'rr;
+                    }
                 }
             }
+            //println!("{seed} {s}");
+            if(ans > s) {
+                ans = s;
+            }
         }
-        //println!("{seed} {s}");
-        if(ans > s) {
-            ans = s;
-        }
+        println!("{}", i);
+
     }
     println!("{ans}");
 
