@@ -1,9 +1,11 @@
 use std::collections::{HashMap, HashSet, LinkedList};
 use std::fs;
+use enum_display_derive::Display;
 use petgraph::Direction;
 use petgraph::dot::Dot;
 use petgraph::graph::{DefaultIx, DiGraph, NodeIndex};
 use replace_with::replace_with_or_abort;
+use std::fmt::Display;
 use substring::Substring;
 use crate::Machine::Broadcast;
 
@@ -16,7 +18,7 @@ enum Machine {
     Def,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Display, Debug, Clone, Copy, PartialEq)]
 enum Pulse {
     Low,
     High,
@@ -50,20 +52,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         edges.extend(dst.split(", ").map(|x| (name, x)).collect::<Vec<_>>());
     }
 
-    dbg!(Dot::new(&graph));
+    //dbg!(Dot::new(&graph));
+    //dbg!(&name2node);
+
+    name2node.insert("rx", graph.add_node(Machine::default()));
 
     for edge in edges {
         graph.add_edge(*name2node.entry(edge.0).or_default(), *name2node.entry(edge.1).or_default(), Pulse::Low);
     }
 
-
+    //dbg!(&name2node);
     dbg!(Dot::new(&graph));
 
     let mut pulses_high = 0;
     let mut pulses_low = 0;
 
     // push button
-    for i in 0..1000 {
+    let mut ans = 0;
+    'outer: loop {
+        //break 'outer;
+        ans += 1;
+        if ans % 1000000 == 0 {
+            println!("{ans}");
+        }
+
         let mut q = LinkedList::<(NodeIndex<DefaultIx>, Pulse)>::new();
         q.push_back((name2node["broadcaster"], Pulse::Low));
         while !q.is_empty() {
@@ -101,7 +113,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     new_pulse = Some(pulse);
                     Broadcast(name.clone())
                 }
-                Machine::Def => { Machine::Def }
+                Machine::Def => {
+                    if pulse ==  Pulse::Low {
+                        break 'outer;
+                    }
+                    Machine::Def
+                }
             };
 
             let mut nbs = Vec::new();
@@ -109,6 +126,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if new_pulse.is_some() {
                 let pulse_new = new_pulse.unwrap();
                 for nb in graph.neighbors_directed(node_ix, Direction::Outgoing) {
+                    if nb.index() == 26 && pulse_new == Pulse::High { // qn
+                        if node_ix.index() == 25 { // jx
+                            println!("jx {pulse_new} @ {ans}");
+                        } else if node_ix.index() == 4 { // qz
+                            println!("qz {pulse_new} @ {ans}");
+                        } else if node_ix.index() == 33 { // tt
+                            println!("tt {pulse_new} @ {ans}");
+                        } else if node_ix.index() == 21 { //cq
+                            println!("cq {pulse_new} @ {ans}");
+                        }
+                    }
                     nbs.push(nb);
                     q.push_back((nb, pulse_new));
                 }
@@ -121,10 +149,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut mut_node = &mut graph[node_ix];
             *mut_node = new_node;
         }
-
         //dbg!(pulses_high, pulses_low);
     }
+    println!("{ans}");
     println!("{}", pulses_high * pulses_low);
+
 
     Ok(())
 }
